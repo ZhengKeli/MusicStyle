@@ -2,10 +2,10 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mustyle.io import load_audio, play_audio, save_audio
+from dataset import load_audio, play_audio, save_audio
 
 
-class TestDatasetLoading(unittest.TestCase):
+class TestDatasetAudio(unittest.TestCase):
     def setUp(self):
         self.audio_path = r"C:\Users\keli\OneDrive\学习\CIS Machine Learning\MusicStyle\data\genres\blues\blues.00000.wav"
         

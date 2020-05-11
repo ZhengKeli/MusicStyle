@@ -2,7 +2,7 @@ import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 
-from mustyle.io.io import load_audio
+from dataset.audio import load_audio
 
 sample_rate = 22050
 mp3_filename = r"C:\Users\keli\OneDrive\学习\CIS Machine Learning\MusicStyle\data\genres\blues\blues.00000.wav"
