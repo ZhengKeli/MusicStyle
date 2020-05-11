@@ -22,3 +22,14 @@ def load_raw_dataset(dataset_dir, extension='wav'):
             dataset[type_name] = tuple(file_list)
     
     return dataset
+
+
+def split_dataset(dataset: dict, ratios=(3, 1, 1)):
+    """ Split the dataset into several parts
+    
+    :param dataset: The dataset to be split.
+    :param ratios: ratios of quantity
+    :return: a tuple of several split dataset
+    """
+    # todo implement this function
+    pass
