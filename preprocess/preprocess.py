@@ -1,20 +1,9 @@
-import abc
-
+import librosa
 import numpy as np
 
 
-class Preprocess(abc.ABC):
-    @abc.abstractmethod
-    def __call__(self, wave: np.ndarray):
-        pass
-
-
-class ConstantQualityTransform(Preprocess):
-    def __call__(self, wave: np.ndarray):
-        """ convert the wave into an image
-        
-        :param wave: shape=[sample_count]
-        :return: the spectrogram. [spectrogram_width, spectrogram_height]
-        """
-        # todo implement this function
-        pass
+def constant_quality_transform(wave: np.ndarray, sample_rate=22050, strides=512, **kwargs):
+    spectrogram = librosa.cqt(wave, sample_rate, strides, **kwargs)
+    spectrogram = np.abs(spectrogram)
+    spectrogram = librosa.amplitude_to_db(spectrogram, ref=np.max)
+    return spectrogram
