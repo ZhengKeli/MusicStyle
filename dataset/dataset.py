@@ -1,8 +1,9 @@
 import os
+
 import numpy as np
 
 
-def load_audio_dataset(dataset_dir, extension='wav'):
+def scan_dataset(dataset_dir):
     if not os.path.isdir(dataset_dir):
         raise ValueError("Path " + dataset_dir + " is not a directory!")
     
@@ -12,24 +13,31 @@ def load_audio_dataset(dataset_dir, extension='wav'):
         if not os.path.isdir(type_dir):
             continue
         
-        file_list = []
+        filename_list = []
         for file_name in os.listdir(type_dir):
-            if not file_name.endswith('.' + extension):
-                continue
             file_path = os.path.join(type_dir, file_name)
-            file_list.append(file_path)
+            filename_list.append(file_path)
         
-        if file_list:
-            dataset[type_name] = tuple(file_list)
+        if filename_list:
+            dataset[type_name] = tuple(filename_list)
     
     return dataset
 
 
-def split_dataset(dataset: dict, ratios=(3, 1, 1)):
+def map_dataset(dataset, func):
+    new_dataset = {}
+    for type_name, item_list in dataset.items():
+        new_item_list = tuple(func(item) for item in item_list)
+        new_dataset[type_name] = new_item_list
+    return new_dataset
+
+
+def split_dataset(dataset: dict, ratios=(3, 1, 1), shuffle=False):
     """ Split the dataset into several parts
     
     :param dataset: The dataset to be split.
     :param ratios: ratios of quantity
+    :param shuffle: if shuffle before splitting
     :return: a tuple of several split dataset
     """
     ratios = np.array(ratios, np.float)
@@ -38,6 +46,9 @@ def split_dataset(dataset: dict, ratios=(3, 1, 1)):
     
     subsets = tuple({} for _ in ratios)
     for type_name, file_list in dataset.items():
+        if shuffle:
+            file_list = np.array(file_list)
+            np.random.shuffle(file_list)
         tails = np.asarray(ratios * len(file_list), np.int)
         head = 0
         for subset, tail in zip(subsets, tails):
