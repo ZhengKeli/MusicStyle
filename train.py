@@ -1,7 +1,8 @@
 import numpy as np
 import tensorflow as tf
+
 from dataset.dataset import flatten_dataset, split_dataset
-from model.resnet import Resnet34
+from model.resnet import Resnet34_modified
 
 # configurations
 sample_rate = 22050
@@ -27,25 +28,24 @@ del test_dataset
 print("dataset split and flattened")
 
 # prepare model
-model = Resnet34(np.shape(train_x)[1:], len(classes))
+model = Resnet34_modified(np.shape(train_x)[1:], len(classes))
 model.compile(
     optimizer=tf.keras.optimizers.Adam(1e-4),
     loss=tf.keras.losses.sparse_categorical_crossentropy,
-    metrics=['accuracy']
-)
+    metrics=['accuracy'])
 
 # train model
 model.fit(
     x=train_x,
     y=train_y,
     batch_size=8,
-    epochs=100,
+    epochs=200,
     validation_data=(test_x, test_y),
     callbacks=[
         tf.keras.callbacks.TerminateOnNaN(),
         tf.keras.callbacks.EarlyStopping(patience=50),
         tf.keras.callbacks.ModelCheckpoint(
-            filepath='./logs/weights_epoch{epoch:04d}.hdf5',
+            filepath='logs/weights_epoch{epoch:04d}.hdf5',
             save_best_only=True,
             save_weights_only=True
         ),

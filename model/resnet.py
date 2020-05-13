@@ -43,7 +43,7 @@ def Resnet34(input_shape, classes):
     x = tf.keras.layers.ZeroPadding2D((3, 3))(inputs)
     
     # conv1
-    x = conv2d_bn(x, filters=64, kernel_size=(3, 7), strides=(2, 2), padding='valid')
+    x = conv2d_bn(x, filters=64, kernel_size=(7, 7), strides=(2, 2), padding='valid')
     x = tf.keras.layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
     
     # conv2_x
@@ -69,7 +69,7 @@ def Resnet34(input_shape, classes):
     x = identity_block(x, nb_filter=512, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
     x = identity_block(x, nb_filter=512, kernel_size=(3, 3))
     x = identity_block(x, nb_filter=512, kernel_size=(3, 3))
-    x = tf.keras.layers.AveragePooling2D(pool_size=(3, 7))(x)
+    x = tf.keras.layers.AveragePooling2D(pool_size=(7, 7))(x)
     x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.Dense(classes)(x)
     x = tf.keras.layers.Softmax()(x)
@@ -112,3 +112,42 @@ def Resnet50(input_shape, classes):
     x = tf.keras.layers.Dense(classes, activation='softmax')(x)
     
     return tf.keras.Model(inputs=inpt, outputs=x)
+
+
+def Resnet34_modified(input_shape, classes):
+    inputs = tf.keras.layers.Input(shape=input_shape)
+    x = tf.keras.layers.ZeroPadding2D((3, 3))(inputs)
+    
+    # conv1
+    x = conv2d_bn(x, filters=64, kernel_size=(3, 11), strides=(2, 3), padding='valid')
+    x = tf.keras.layers.MaxPooling2D(pool_size=(3, 5), strides=(2, 3), padding='same')(x)
+    
+    # conv2_x
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 5))
+    
+    # conv3_x
+    x = identity_block(x, nb_filter=128, kernel_size=(3, 5), strides=(2, 3), conv_shortcut=True)
+    x = identity_block(x, nb_filter=128, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=128, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=128, kernel_size=(3, 5))
+    
+    # conv4_x
+    x = identity_block(x, nb_filter=256, kernel_size=(3, 5), strides=(2, 3), conv_shortcut=True)
+    x = identity_block(x, nb_filter=256, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=256, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=256, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=256, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=256, kernel_size=(3, 5))
+    
+    # conv5_x
+    x = identity_block(x, nb_filter=512, kernel_size=(3, 5), strides=(2, 3), conv_shortcut=True)
+    x = identity_block(x, nb_filter=512, kernel_size=(3, 5))
+    x = identity_block(x, nb_filter=512, kernel_size=(3, 5))
+    x = tf.keras.layers.AveragePooling2D(pool_size=(3, 3))(x)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(classes)(x)
+    x = tf.keras.layers.Softmax()(x)
+    
+    return tf.keras.Model(inputs=inputs, outputs=x)
