@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dataset import load_audio, play_audio, save_audio
+from dataset.audio import load_audio, play_audio, save_audio
 
 
 class TestDatasetAudio(unittest.TestCase):

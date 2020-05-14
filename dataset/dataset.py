@@ -1,5 +1,5 @@
 import os
-
+import tensorflow as tf
 import numpy as np
 
 
@@ -22,14 +22,6 @@ def scan_dataset(dataset_dir):
             dataset[type_name] = tuple(filename_list)
     
     return dataset
-
-
-def map_dataset(dataset, func):
-    new_dataset = {}
-    for type_name, item_list in dataset.items():
-        new_item_list = tuple(func(item) for item in item_list)
-        new_dataset[type_name] = new_item_list
-    return new_dataset
 
 
 def split_dataset(dataset: dict, ratios=(3, 1, 1), shuffle=False):
@@ -69,7 +61,14 @@ def flatten_dataset(dataset: dict, shuffle=True):
     if shuffle:
         np.random.shuffle(flattened_dataset)
     
-    inputs, outputs = zip(*flattened_dataset)
-    inputs = np.asarray(inputs)
-    outputs = np.asarray(outputs)
-    return type_names, inputs, outputs
+    flattened_dataset = tuple(flattened_dataset)
+    return type_names, flattened_dataset
+
+
+def compile_dataset(dataset, preprocess, output_types, output_shapes):
+    def data_gen():
+        for item in dataset:
+            yield preprocess(*item)
+    
+    tf_dataset = tf.data.Dataset.from_generator(data_gen, output_types, output_shapes)
+    return tf_dataset

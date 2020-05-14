@@ -17,6 +17,7 @@ print("input_shape =", input_shape)
 # show
 fig, axes = plt.subplots(10, 3, figsize=(10, 7))
 for (tn, il), ax in zip(dataset.items(), axes):
+    print(tn)
     for im, a in zip(il, ax):
         a.imshow(im[:, :, 0])
         a.axis('off')
