@@ -1,18 +1,16 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import tensorflow as tf
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from tensorflow.keras import layers
-from tensorflow.keras import models
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
 
-# reading dataset from csv
 from model.dense import DeepDenseNet
 
-dataset = pd.read_csv('dataset_2.csv')
+# reading dataset from csv
+dataset = pd.read_csv('data/dataset_2.csv')
 dataset = dataset.drop(['filename'], axis=1)
 
 genre_list = dataset.iloc[:, -1]
@@ -59,6 +57,6 @@ print("accuracy =", accuracy)
 
 sns.set()
 cm = confusion_matrix(y_test, y_pred)
-sns.heatmap(cm, annot=True, xticklabels=encoder.classes_, yticklabels=encoder.classes_)
+sns.heatmap(cm, annot=True, vmin=0, vmax=20, xticklabels=encoder.classes_, yticklabels=encoder.classes_)
 plt.tight_layout()
 plt.show()
