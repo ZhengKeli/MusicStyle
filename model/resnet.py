@@ -69,6 +69,7 @@ def Resnet34(input_shape, classes):
     x = identity_block(x, nb_filter=512, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
     x = identity_block(x, nb_filter=512, kernel_size=(3, 3))
     x = identity_block(x, nb_filter=512, kernel_size=(3, 3))
+    
     x = tf.keras.layers.AveragePooling2D(pool_size=(7, 7))(x)
     x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.Dense(classes)(x)
@@ -114,42 +115,48 @@ def Resnet50(input_shape, classes):
     return tf.keras.Model(inputs=inpt, outputs=x)
 
 
-def Resnet34_modified(input_shape, classes):
+def Resnet34_v011(input_shape, classes):
     inputs = tf.keras.layers.Input(shape=input_shape)
     x = inputs
     
-    # conv1
-    x = conv2d_bn(x, filters=64, kernel_size=(5, 11), strides=(1, 2), padding='same')
+    x = conv2d_bn(x, filters=32, kernel_size=(5, 9), strides=(1, 2), padding='same')
+    x = identity_block(x, nb_filter=32, kernel_size=(3, 3))
+    x = identity_block(x, nb_filter=32, kernel_size=(3, 3))
     
-    # conv2_x
-    x = identity_block(x, nb_filter=64, kernel_size=(3, 3))
-    x = identity_block(x, nb_filter=64, kernel_size=(3, 3))
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(1, 2), conv_shortcut=True)
     x = identity_block(x, nb_filter=64, kernel_size=(3, 3))
     
-    # conv3_x
-    x = identity_block(x, nb_filter=128, kernel_size=(3, 3), strides=(1, 2), conv_shortcut=True)
-    x = identity_block(x, nb_filter=128, kernel_size=(3, 3))
-    x = identity_block(x, nb_filter=128, kernel_size=(3, 3))
+    x = identity_block(x, nb_filter=128, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
     x = identity_block(x, nb_filter=128, kernel_size=(3, 3))
     
-    # conv4_x
     x = identity_block(x, nb_filter=256, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
     x = identity_block(x, nb_filter=256, kernel_size=(3, 3))
-    x = identity_block(x, nb_filter=256, kernel_size=(3, 3))
-    x = identity_block(x, nb_filter=256, kernel_size=(3, 3))
-    x = identity_block(x, nb_filter=256, kernel_size=(3, 3))
-    x = identity_block(x, nb_filter=256, kernel_size=(3, 3))
-    
-    # conv5_x
-    x = identity_block(x, nb_filter=512, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
-    x = identity_block(x, nb_filter=512, kernel_size=(3, 3))
-    x = identity_block(x, nb_filter=512, kernel_size=(3, 3))
     
     # tail
     x = tf.keras.layers.AveragePooling2D(pool_size=(3, 7))(x)
-    
     x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.Dense(classes)(x)
     x = tf.keras.layers.Softmax()(x)
     
     return tf.keras.Model(inputs=inputs, outputs=x)
+
+
+def Resnet34_v020(sp_shape, classes):
+    sp = tf.keras.layers.Input(shape=sp_shape)
+    x = sp
+    
+    x = conv2d_bn(x, filters=32, kernel_size=(7, 7), strides=(1, 1), padding='same')
+    x = identity_block(x, nb_filter=32, kernel_size=(3, 3))
+    
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3))
+    
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3))
+    
+    x = tf.reduce_mean(x, axis=-2)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(classes)(x)
+    x = tf.keras.layers.Softmax()(x)
+    
+    return tf.keras.Model(inputs=sp, outputs=x)
