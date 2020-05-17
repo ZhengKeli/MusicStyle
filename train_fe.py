@@ -3,6 +3,7 @@ import numpy as np
 import seaborn as sns
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from dataset.extracting import load_extracted_feature
@@ -41,15 +42,26 @@ x_train, y_train = load_subset(train_set)
 x_test, y_test = load_subset(test_set)
 x_valid, y_valid = load_subset(valid_set)
 
+# mix all
+# x_all = np.concatenate([x_train, x_test, x_valid], 0)
+# y_all = np.concatenate([y_train, y_test, y_valid], 0)
+# x_train, x_test, y_train, y_test = train_test_split(x_all, y_all, test_size=0.4)
+# x_test, x_valid, y_test, y_valid = train_test_split(x_test, y_test, test_size=0.5)
+
+# mix train and test
+# x_all = np.concatenate([x_train, x_test], 0)
+# y_all = np.concatenate([y_train, y_test], 0)
+# x_train, x_test, y_train, y_test = train_test_split(x_all, y_all, test_size=0.4)
+
+
 # normalizing
 scaler = StandardScaler()
 scaler.fit(x_train)
-
 x_train = scaler.transform(x_train)
 x_test = scaler.transform(x_test)
 x_valid = scaler.transform(x_valid)
 
-# prepare the model
+# prepare model
 model = DeepDenseNet(x_train.shape[-1], len(class_names))
 model.compile(
     optimizer=tf.keras.optimizers.Adam(2e-4),
@@ -60,9 +72,10 @@ model.compile(
 model.fit(
     x=x_train,
     y=y_train,
+    validation_data=(x_test, y_test),
+    shuffle=True,
     batch_size=128,
     epochs=400,
-    validation_data=(x_test, y_test),
     callbacks=[
         tf.keras.callbacks.TerminateOnNaN(),
         tf.keras.callbacks.EarlyStopping(patience=100),

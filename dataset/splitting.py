@@ -74,9 +74,10 @@ def save_cls_file(classes, filename):
             file.write('\n')
 
 
-def save_ref_file(flattened_dataset, filename):
+def save_ref_file(flattened_dataset, filename, overwrite=False):
     if os.path.exists(filename):
-        raise FileExistsError(filename)
+        if not overwrite:
+            raise FileExistsError(filename)
     
     with open(filename, 'w') as file:
         for fn, cls_id in flattened_dataset:

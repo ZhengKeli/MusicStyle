@@ -1,19 +1,19 @@
 import librosa
 import numpy as np
+import threading
 
 from dataset.audio import load_audio
-from dataset.dataset import scan_dataset
 from dataset.extracting import save_extracted_feature
 from dataset.spectrogram import cqt_spectrogram, mfcc_spectrogram
+from dataset.splitting import scan_dataset
 
 # conf
-
 dataset_dir = "./data"
 sample_rate = 22050
+overwrite = True
 
 
 # extractors
-
 def wave_features_extractor(wave):
     chroma_stft = librosa.feature.chroma_stft(wave, sample_rate)
     chroma_stft = np.mean(chroma_stft)
@@ -39,8 +39,7 @@ def wave_features_extractor(wave):
         spectral_centroid=spectral_centroid,
         spectral_bandwidth=spectral_bandwidth,
         spectral_rolloff=spectral_rolloff,
-        zero_crossing_rate=zero_crossing_rate
-    )
+        zero_crossing_rate=zero_crossing_rate)
 
 
 def mfcc_features_extractor(wave):
@@ -54,8 +53,7 @@ def spectrogram_extractor(wave):
     cqt_sp = cqt_spectrogram(wave, sample_rate, 84)
     return dict(
         mfcc_spectrogram=mfcc_sp,
-        cqt_spectrogram=cqt_sp
-    )
+        cqt_spectrogram=cqt_sp)
 
 
 # extract
@@ -69,20 +67,26 @@ all_feature_names = None
 
 dataset = scan_dataset(dataset_dir)
 for cls, filename_list in dataset.items():
-    for filename in filename_list:
-        wave = load_audio(filename, sample_rate)
-        
-        features = {}
-        for extractor in all_extractors:
-            features = {**features, **extractor(wave)}
-        
-        if all_feature_names is None:
-            all_feature_names = list(features.keys())
-            print('feature_names =', all_feature_names)
-        
-        for feature_name, feature_value in features.items():
-            save_extracted_feature(filename, feature_name, feature_value)
-        
-        print("\tfinished extraction for file " + filename)
-    print("finished extraction for class " + cls)
+    
+    def job():
+        for filename in filename_list:
+            wave = load_audio(filename, sample_rate)
+            
+            features = {}
+            for extractor in all_extractors:
+                features = {**features, **extractor(wave)}
+            
+            # if all_feature_names is None:
+            #     all_feature_names = list(features.keys())
+            #     print('feature_names =', all_feature_names)
+            
+            for feature_name, feature_value in features.items():
+                save_extracted_feature(filename, feature_name, feature_value, overwrite)
+            
+            print("\tfinished extraction for file " + filename)
+        print("finished extraction for class " + cls)
+    
+    
+    threading.Thread(target=job).start()
+
 print("finished all")
