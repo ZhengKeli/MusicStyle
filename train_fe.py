@@ -49,9 +49,9 @@ x_valid, y_valid = load_subset(valid_set)
 # x_test, x_valid, y_test, y_valid = train_test_split(x_test, y_test, test_size=0.5)
 
 # mix train and test
-# x_all = np.concatenate([x_train, x_test], 0)
-# y_all = np.concatenate([y_train, y_test], 0)
-# x_train, x_test, y_train, y_test = train_test_split(x_all, y_all, test_size=0.4)
+x_all = np.concatenate([x_train, x_test], 0)
+y_all = np.concatenate([y_train, y_test], 0)
+x_train, x_test, y_train, y_test = train_test_split(x_all, y_all, test_size=0.4)
 
 
 # normalizing

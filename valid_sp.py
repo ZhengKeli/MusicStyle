@@ -5,19 +5,18 @@ from sklearn.metrics import confusion_matrix
 
 from dataset.extracting import load_extracted_feature
 from dataset.splitting import load_ref_files
-from model.resnet import Resnet34_v020
+from model.resnet import Resnet34_v022
 
 # configurations
 dataset_dir = "./data"
 sample_rate = 22050
-weights_filename = "logs\weights_epoch0009.hdf5"
+weights_filename = r"logs_archive\logs_resnet022\weights_epoch0036.hdf5"
 
 n_sp = 84
-clip_size = 1290
-input_shape = [n_sp, clip_size, 1]
+clip_size = 1290  # 1290
 
 # ref files
-class_names, train_set, test_set, valid_set = load_ref_files(dataset_dir)
+class_names, _, test_set, valid_set = load_ref_files(dataset_dir)
 
 # spectrogram_names = ['mfcc_spectrogram', 'cqt_spectrogram']
 spectrogram_names = ['cqt_spectrogram']
@@ -47,12 +46,11 @@ def load_subset(subset):
     return xs, ys
 
 
-x_train, y_train = load_subset(train_set)
 x_test, y_test = load_subset(test_set)
 x_valid, y_valid = load_subset(valid_set)
 
 # prepare model
-model = Resnet34_v020(input_shape, len(class_names))
+model = Resnet34_v022([n_sp, clip_size, len(spectrogram_names)], len(class_names))
 model.load_weights(weights_filename, by_name=True)
 
 # perform the validation

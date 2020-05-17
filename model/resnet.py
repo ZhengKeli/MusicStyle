@@ -141,6 +141,7 @@ def Resnet34_v011(input_shape, classes):
     return tf.keras.Model(inputs=inputs, outputs=x)
 
 
+# train99 test68 val62
 def Resnet34_v020(sp_shape, classes):
     sp = tf.keras.layers.Input(shape=sp_shape)
     x = sp
@@ -160,3 +161,100 @@ def Resnet34_v020(sp_shape, classes):
     x = tf.keras.layers.Softmax()(x)
     
     return tf.keras.Model(inputs=sp, outputs=x)
+
+
+# train91 test67 val62
+def Resnet34_v021(sp_shape, classes):
+    sp = tf.keras.layers.Input(shape=sp_shape)
+    x = sp
+    
+    x = conv2d_bn(x, filters=32, kernel_size=(7, 7), strides=(2, 2), padding='valid')
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    
+    x = tf.transpose(x, [0, 2, 1, 3])
+    x = tf.keras.layers.Lambda(lambda x: tf.reshape(x, [tf.shape(x)[0], tf.shape(x)[1], 10 * 64]))(x)
+    x = tf.keras.layers.MaxPool1D(7, 2)(x)
+    x = tf.reduce_mean(x, axis=-2)
+    
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.Dense(classes)(x)
+    x = tf.keras.layers.Softmax()(x)
+    
+    return tf.keras.Model(inputs=sp, outputs=x)
+
+
+# train99 test67 val62
+def Resnet34_v022(sp_shape, classes):
+    sp = tf.keras.layers.Input(shape=sp_shape)
+    x = sp
+    
+    x = conv2d_bn(x, filters=32, kernel_size=(7, 7), strides=(2, 2), padding='valid')
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    
+    x = tf.transpose(x, [0, 2, 1, 3])
+    x = tf.keras.layers.Lambda(lambda x: tf.reshape(x, [tf.shape(x)[0], tf.shape(x)[1], 10 * 64]))(x)
+    x = tf.keras.layers.MaxPool1D(7, 2)(x)
+    x = tf.reduce_mean(x, axis=-2)
+    
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(classes)(x)
+    x = tf.keras.layers.Softmax()(x)
+    
+    return tf.keras.Model(inputs=sp, outputs=x)
+
+
+def Resnet34_v030(sp_shape, fe_shape, classes):
+    sp = tf.keras.layers.Input(shape=sp_shape)
+    x = sp
+    
+    x = conv2d_bn(x, filters=32, kernel_size=(7, 7), strides=(1, 1), padding='same')
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    
+    x = tf.reduce_mean(x, axis=-2)
+    x = tf.keras.layers.Flatten()(x)
+    
+    fe = tf.keras.layers.Input(shape=fe_shape)
+    z = fe
+    
+    z = tf.keras.layers.Dense(256, activation='relu')(z)
+    
+    y = tf.concat([x, z], -1)
+    y = tf.keras.layers.Dense(128, activation='relu')(y)
+    y = tf.keras.layers.Dense(64, activation='relu')(y)
+    y = tf.keras.layers.Dense(classes)(y)
+    y = tf.keras.layers.Softmax()(y)
+    
+    return tf.keras.Model(inputs=[sp, fe], outputs=y)
+
+
+def Resnet34_v031(sp_shape, fe_shape, classes):
+    # sp
+    sp = tf.keras.layers.Input(shape=sp_shape)
+    x = sp
+    
+    x = conv2d_bn(x, filters=32, kernel_size=(7, 7), strides=(1, 1), padding='same')
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    x = identity_block(x, nb_filter=64, kernel_size=(3, 3), strides=(2, 2), conv_shortcut=True)
+    
+    x = tf.reduce_mean(x, axis=-2)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+    
+    # fe
+    fe = tf.keras.layers.Input(shape=fe_shape)
+    z = fe
+    
+    z = tf.keras.layers.Dense(256, activation='relu')(z)
+    z = tf.keras.layers.Dense(128, activation='relu')(z)
+    z = tf.keras.layers.Dense(32, activation='relu')(z)
+    
+    # soft max
+    y = x + z
+    y = tf.keras.layers.Dense(classes)(y)
+    y = tf.keras.layers.Softmax()(y)
+    
+    return tf.keras.Model(inputs=[sp, fe], outputs=y)
