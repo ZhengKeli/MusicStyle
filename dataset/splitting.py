@@ -28,7 +28,7 @@ def load_ref_file(filename):
             fn, cls_id = line.split(',')
             cls_id = int(cls_id)
             dataset.append((fn, cls_id))
-    return tuple(dataset)
+    return dataset
 
 
 def load_ref_files(dataset_dir):
