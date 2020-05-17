@@ -1,33 +1,58 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 
+from dataset.extracting import load_extracted_feature
+from dataset.splitting import load_ref_files
 from model.dense import DeepDenseNet
 
-# reading dataset from csv
-dataset = pd.read_csv('data/dataset_2.csv')
-dataset = dataset.drop(['filename'], axis=1)
+# conf
+sample_rate = 22050
+dataset_dir = "./data"
 
-genre_list = dataset.iloc[:, -1]
-encoder = LabelEncoder()
-y_all = encoder.fit_transform(genre_list)
+# ref files
+class_names, train_set, test_set, valid_set = load_ref_files(dataset_dir)
+
+feature_names = [
+    'chroma_stft', 'root_mean_square', 'spectral_centroid', 'spectral_bandwidth', 'spectral_rolloff',
+    'zero_crossing_rate', 'mfcc0', 'mfcc1', 'mfcc2', 'mfcc3', 'mfcc4', 'mfcc5', 'mfcc6', 'mfcc7', 'mfcc8',
+    'mfcc9', 'mfcc10', 'mfcc11', 'mfcc12', 'mfcc13', 'mfcc14', 'mfcc15', 'mfcc16', 'mfcc17', 'mfcc18', 'mfcc19']
+
+
+# load dataset
+def load_subset(subset):
+    xs = []
+    ys = []
+    for audio_filename, class_id in subset:
+        x = [load_extracted_feature(audio_filename, feature_name)
+             for feature_name in feature_names]
+        y = class_id
+        xs.append(x)
+        ys.append(y)
+    xs = np.asarray(xs)
+    ys = np.asarray(ys)
+    return xs, ys
+
+
+x_train, y_train = load_subset(train_set)
+x_test, y_test = load_subset(test_set)
+x_valid, y_valid = load_subset(valid_set)
 
 # normalizing
 scaler = StandardScaler()
-x_all = scaler.fit_transform(np.array(dataset.iloc[:, :-1], dtype=float))
+scaler.fit(x_train)
 
-# splitting of dataset into train and test dataset
-x_train, x_test, y_train, y_test = train_test_split(x_all, y_all, test_size=0.2)
+x_train = scaler.transform(x_train)
+x_test = scaler.transform(x_test)
+x_valid = scaler.transform(x_valid)
 
 # prepare the model
-model = DeepDenseNet(x_train.shape[1], len(encoder.classes_))
+model = DeepDenseNet(x_train.shape[-1], len(class_names))
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(1e-4),
+    optimizer=tf.keras.optimizers.Adam(2e-4),
     loss=tf.keras.losses.sparse_categorical_crossentropy,
     metrics=['accuracy'])
 
@@ -36,27 +61,33 @@ model.fit(
     x=x_train,
     y=y_train,
     batch_size=128,
-    epochs=200,
+    epochs=400,
     validation_data=(x_test, y_test),
     callbacks=[
         tf.keras.callbacks.TerminateOnNaN(),
-        tf.keras.callbacks.EarlyStopping(patience=50),
+        tf.keras.callbacks.EarlyStopping(patience=100),
         # tf.keras.callbacks.ModelCheckpoint(
-        #     filepath='logs_archive/logs_0.0.1/weights_epoch{epoch:04d}.hdf5',
+        #     filepath='logs/weights_epoch{epoch:04d}.hdf5',
         #     save_best_only=True,
         #     save_weights_only=True
         # ),
         # tf.keras.callbacks.TensorBoard(),
     ])
 
-pred_prob = model.predict(x_test)
-y_pred = np.argmax(pred_prob, -1)
 
-accuracy = np.mean(y_test == y_pred)
-print("accuracy =", accuracy)
+# validation
+def compute_accuracy(xs, ys):
+    p_pred = model.predict(xs)
+    y_pred = np.argmax(p_pred, -1)
+    accuracy = np.mean(y_pred == ys)
+    return accuracy
 
-sns.set()
-cm = confusion_matrix(y_test, y_pred)
-sns.heatmap(cm, annot=True, vmin=0, vmax=20, xticklabels=encoder.classes_, yticklabels=encoder.classes_)
+
+print("train accuracy =", compute_accuracy(x_train, y_train))
+print("test accuracy =", compute_accuracy(x_test, y_test))
+print("valid accuracy =", compute_accuracy(x_valid, y_valid))
+
+cm = confusion_matrix(y_valid, np.argmax(model.predict(x_valid), -1))
+sns.heatmap(cm, annot=True, vmin=0, vmax=20, xticklabels=class_names, yticklabels=class_names)
 plt.tight_layout()
 plt.show()
