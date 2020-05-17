@@ -1,5 +1,7 @@
+import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 from dataset.extracting import load_extracted_feature
 from dataset.splitting import load_ref_files
@@ -8,9 +10,10 @@ from model.resnet import Resnet34_v020
 # configurations
 dataset_dir = "./data"
 sample_rate = 22050
+weights_filename = "logs\weights_epoch0009.hdf5"
 
 n_sp = 84
-clip_size = 430
+clip_size = 1290
 input_shape = [n_sp, clip_size, 1]
 
 # ref files
@@ -50,26 +53,16 @@ x_valid, y_valid = load_subset(valid_set)
 
 # prepare model
 model = Resnet34_v020(input_shape, len(class_names))
-model.compile(
-    optimizer=tf.keras.optimizers.Adam(1e-4),
-    loss=tf.keras.losses.sparse_categorical_crossentropy,
-    metrics=['accuracy'])
+model.load_weights(weights_filename, by_name=True)
 
-# train model
-model.fit(
-    x=x_train,
-    y=y_train,
-    validation_data=(x_test, y_test),
-    shuffle=True,
-    batch_size=8,
-    epochs=100,
-    callbacks=[
-        tf.keras.callbacks.TerminateOnNaN(),
-        tf.keras.callbacks.EarlyStopping(patience=10),
-        tf.keras.callbacks.ModelCheckpoint(
-            filepath='logs/weights_epoch{epoch:04d}.hdf5',
-            save_best_only=True,
-            save_weights_only=True
-        ),
-        tf.keras.callbacks.TensorBoard(),
-    ])
+# perform the validation
+prob_pred = model.predict(x_valid)
+y_pred = np.argmax(prob_pred, -1)
+valid_accuracy = np.mean(y_valid == y_pred)
+print("valid accuracy =", valid_accuracy)
+
+sns.set()
+cm = confusion_matrix(y_valid, y_pred)
+sns.heatmap(cm, annot=True, vmin=0, vmax=20, xticklabels=class_names, yticklabels=class_names)
+plt.tight_layout()
+plt.show()
