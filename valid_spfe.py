@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 
 from dataset.extracting import load_extracted_feature
 from dataset.splitting import load_ref_files
-from model.resnet import Resnet34_v031
+from model.resnet import Resnet031
 
 # configurations
 dataset_dir = "./data"
@@ -53,7 +53,7 @@ x_valid = np.asarray(valid_sp), np.asarray(valid_fe)
 y_valid = np.asarray(valid_cli)
 
 # prepare model
-model = Resnet34_v031([n_sp, clip_size, 1], [len(feature_names)], len(class_names))
+model = Resnet031([n_sp, clip_size, 1], [len(feature_names)], len(class_names))
 model.load_weights(weights_filename, by_name=True)
 
 # train model

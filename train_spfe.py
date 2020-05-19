@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from dataset.extracting import load_extracted_feature
 from dataset.splitting import load_ref_files
-from model.resnet import Resnet34_v031
+from model.resnet import Resnet031
 
 # configurations
 dataset_dir = "./data"
@@ -47,7 +47,7 @@ test_tf_dataset = tf.data.Dataset.from_generator(
     ((tf.float32, tf.float32), tf.int32), (([n_sp, clip_size, 1], [len(feature_names)]), []))
 
 # prepare model
-model = Resnet34_v031([n_sp, clip_size, 1], [len(feature_names)], len(class_names))
+model = Resnet031([n_sp, clip_size, 1], [len(feature_names)], len(class_names))
 model.compile(
     optimizer=tf.keras.optimizers.Adam(1e-4),
     loss=tf.keras.losses.sparse_categorical_crossentropy,

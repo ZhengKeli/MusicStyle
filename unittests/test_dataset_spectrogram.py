@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from dataset.audio import load_audio
-from dataset.dataset import scan_dataset
 from dataset.spectrogram import cqt_spectrogram, mfcc_spectrogram
+from dataset.splitting import scan_dataset
 
 
 class TestDatasetSpectrogram(unittest.TestCase):
@@ -46,5 +46,5 @@ class TestDatasetSpectrogram(unittest.TestCase):
     def test_mfcc_spectrogram(self):
         for wave, cls, fi in self.wave_gen(3):
             sp = mfcc_spectrogram(wave, self.sample_rate, n_mfcc=84)
-            # self.show_hsit(sp, cls, fi)
+            self.show_hsit(sp, cls, fi)
             self.show_spectrogram(sp, cls, fi)
