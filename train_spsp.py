@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from dataset.extracting import load_extracted_feature
 from dataset.splitting import load_ref_files
-from model.resnet import Resnet040, Resnet041
+from model.spnet import SpNet_v1, SpNet_v2
 
 # configurations
 dataset_dir = "./data"
@@ -50,15 +50,15 @@ def load_subset(subset, noise=0.0):
 
 
 train_tf_dataset = tf.data.Dataset.from_generator(
-    lambda: load_subset(train_set, 0.1),
+    lambda: load_subset(train_set),
     ((tf.float32, tf.float32), tf.int32), (input_shape, []))
 
 test_tf_dataset = tf.data.Dataset.from_generator(
     lambda: load_subset(test_set),
     ((tf.float32, tf.float32), tf.int32), (input_shape, []))
 
-# prepare model
-model = Resnet041(*input_shape, len(class_names))
+# prepare motdel
+model = SpNet_v1(*input_shape, len(class_names))
 model.compile(
     optimizer=tf.keras.optimizers.Adam(1e-4),
     loss=tf.keras.losses.sparse_categorical_crossentropy,
@@ -69,7 +69,7 @@ model.fit(
     x=train_tf_dataset.batch(8),
     validation_data=test_tf_dataset.batch(8),
     shuffle=True,
-    epochs=100,
+    epochs=200,
     callbacks=[
         tf.keras.callbacks.TerminateOnNaN(),
         tf.keras.callbacks.EarlyStopping(patience=30),

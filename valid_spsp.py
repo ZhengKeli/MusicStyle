@@ -5,12 +5,12 @@ from sklearn.metrics import confusion_matrix
 
 from dataset.extracting import load_extracted_feature
 from dataset.splitting import load_ref_files
-from model.resnet import Resnet040, Resnet041
+from model.spnet import SpNet_v1
 
 # configurations
 dataset_dir = "./data"
 sample_rate = 22050
-weights_filename = r"logs_archive\logs_resnet040\weights_epoch0018.hdf5"
+weights_filename = r"logs_archive\logs_spnet1_2\weights_epoch0087.hdf5"
 
 n_sp = 84
 clip_size = 1290  # 1290
@@ -57,7 +57,7 @@ x_test, y_test = load_subset(test_set)
 x_valid, y_valid = load_subset(valid_set)
 
 # prepare model
-model = Resnet040([n_sp, clip_size, 1], [n_sp, clip_size, 1], len(class_names))
+model = SpNet_v1([n_sp, clip_size, 1], [n_sp, clip_size, 1], len(class_names))
 model.load_weights(weights_filename, by_name=True)
 
 # on test set

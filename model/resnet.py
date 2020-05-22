@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 
 
-def conv2d_bn(x, filters, kernel_size, strides=(1, 1), padding='same', name=None):
+def conv2d_bn(x, filters, kernel_size, strides=(1, 1), padding='same', regularizer=None, name=None):
     if name is not None:
         bn_name = name + '_bn'
         conv_name = name + '_conv'
@@ -10,18 +10,23 @@ def conv2d_bn(x, filters, kernel_size, strides=(1, 1), padding='same', name=None
         bn_name = None
         conv_name = None
     
-    x = tf.keras.layers.Conv2D(filters, kernel_size, padding=padding, strides=strides, name=conv_name)(x)
+    x = tf.keras.layers.Conv2D(filters, kernel_size, padding=padding, strides=strides,
+                               kernel_regularizer=regularizer,
+                               name=conv_name)(x)
     x = tf.keras.layers.ReLU()(x)
     x = tf.keras.layers.BatchNormalization(name=bn_name)(x)
     return x
 
 
-def identity_block(x, nb_filter, kernel_size, strides=(1, 1), conv_shortcut=False):
+def identity_block(x, nb_filter, kernel_size, strides=(1, 1), regularizer=None, conv_shortcut=False):
     shortcut = x
-    x = conv2d_bn(x, filters=nb_filter, kernel_size=kernel_size, strides=strides, padding='same')
-    x = conv2d_bn(x, filters=nb_filter, kernel_size=kernel_size, padding='same')
+    x = conv2d_bn(x, filters=nb_filter, kernel_size=kernel_size, strides=strides,
+                  padding='same', regularizer=regularizer)
+    x = conv2d_bn(x, filters=nb_filter, kernel_size=kernel_size,
+                  padding='same', regularizer=regularizer)
     if conv_shortcut:
-        shortcut = conv2d_bn(shortcut, filters=nb_filter, strides=strides, kernel_size=kernel_size)
+        shortcut = conv2d_bn(shortcut, filters=nb_filter, strides=strides, kernel_size=kernel_size,
+                             padding='same', regularizer=regularizer)
     x = x + shortcut
     return x
 
