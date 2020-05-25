@@ -1,10 +1,11 @@
+import threading
+
 import librosa
 import numpy as np
-import threading
 
 from dataset.audio import load_audio
 from dataset.extracting import save_extracted_feature
-from dataset.spectrogram import cqt_spectrogram, mfcc_spectrogram
+from dataset.spectrogram import cqt_spectrogram, mel_spectrogram, mfcc_spectrogram
 from dataset.splitting import scan_dataset
 
 # conf
@@ -51,9 +52,12 @@ def mfcc_features_extractor(wave):
 def spectrogram_extractor(wave):
     mfcc_sp = mfcc_spectrogram(wave, sample_rate, 84)
     cqt_sp = cqt_spectrogram(wave, sample_rate, 84)
+    mel_sp = mel_spectrogram(wave, sample_rate, 84)
     return dict(
         mfcc_spectrogram=mfcc_sp,
-        cqt_spectrogram=cqt_sp)
+        cqt_spectrogram=cqt_sp,
+        mel_spectrogram=mel_sp
+    )
 
 
 # extract
@@ -68,7 +72,7 @@ all_feature_names = None
 dataset = scan_dataset(dataset_dir)
 for cls, filename_list in dataset.items():
     
-    def job():
+    def job(cls, filename_list):
         for filename in filename_list:
             wave = load_audio(filename, sample_rate)
             
@@ -76,9 +80,10 @@ for cls, filename_list in dataset.items():
             for extractor in all_extractors:
                 features = {**features, **extractor(wave)}
             
-            # if all_feature_names is None:
-            #     all_feature_names = list(features.keys())
-            #     print('feature_names =', all_feature_names)
+            global all_feature_names
+            if all_feature_names is None:
+                all_feature_names = list(features.keys())
+                print('feature_names =', all_feature_names)
             
             for feature_name, feature_value in features.items():
                 save_extracted_feature(filename, feature_name, feature_value, overwrite)
@@ -87,6 +92,6 @@ for cls, filename_list in dataset.items():
         print("finished extraction for class " + cls)
     
     
-    threading.Thread(target=job).start()
+    threading.Thread(target=job, args=[cls, filename_list]).start()
 
 print("finished all")
