@@ -5,49 +5,80 @@ from sklearn.metrics import confusion_matrix
 
 from dataset.extracting import load_extracted_feature
 from dataset.splitting import load_ref_files
-from model.resnet import Resnet022
+from model.spnet import SpNet
 
 # configurations
 dataset_dir = "./data"
 sample_rate = 22050
-weights_filename = r"logs_archive\logs_resnet022_mfcc\weights_epoch0038.hdf5"
+weights_filename = r"logs_sp\weights_epoch0108.hdf5"
 
-n_sp = 84
+n_cqt = 84
+n_mfcc = 84
+n_mel = 128
 clip_size = 1290  # 1290
+
+input_shape = ([n_cqt, None, 1], [n_mel, None, 1])
 
 # ref files
 class_names, _, test_set, valid_set = load_ref_files(dataset_dir)
-
-spectrogram_name = 'mfcc_spectrogram'
+spectrogram_names = ['cqt_spectrogram', 'mel_spectrogram']
 
 
 # load dataset
-def load_subset(subset):
-    xs = []
+def random_clip_spectrogram(spectrogram, clip_size):
+    sp_length = np.shape(spectrogram)[1]
+    if clip_size < sp_length:
+        clip_head = np.random.randint(0, sp_length - clip_size)
+        clip_tail = clip_head + clip_size
+        spectrogram = spectrogram[:, clip_head:clip_tail]
+    return spectrogram
+
+
+def load_subset(subset, noise=0.0):
+    sp1s = []
+    sp2s = []
     ys = []
     for audio_filename, class_id in subset:
-        sp = load_extracted_feature(audio_filename, spectrogram_name)
-        sp_length = np.shape(sp)[1]
-        if clip_size < sp_length:
-            clip_head = np.random.randint(0, sp_length - clip_size)
-            clip_tail = clip_head + clip_size
-            sp = sp[:, clip_head:clip_tail]
-        sp = np.expand_dims(sp, -1)
-        xs.append(sp)
-        
-        y = class_id
-        ys.append(y)
-    xs = np.asarray(xs)
+        sps = []
+        for spectrogram_name in spectrogram_names:
+            sp = load_extracted_feature(audio_filename, spectrogram_name)
+            sp = random_clip_spectrogram(sp, clip_size)
+            sp = np.expand_dims(sp, -1)
+            if noise != 0.0:
+                sp += np.random.normal(0, noise, np.shape(sp))
+            sps.append(sp)
+        sp1, sp2 = sps
+        sp1s.append(sp1)
+        sp2s.append(sp2)
+        ys.append(class_id)
+    sp1s = np.asarray(sp1s)
+    sp2s = np.asarray(sp2s)
     ys = np.asarray(ys)
-    return xs, ys
+    return (sp1s, sp2s), ys
 
 
 x_test, y_test = load_subset(test_set)
 x_valid, y_valid = load_subset(valid_set)
 
 # prepare model
-model = Resnet022([n_sp, clip_size, 1], len(class_names))
+model = SpNet(*input_shape, len(class_names))
 model.load_weights(weights_filename, by_name=True)
+
+# on test set
+# perform the validation
+prob_pred = model.predict(x_test)
+y_pred = np.argmax(prob_pred, -1)
+test_accuracy = np.mean(y_test == y_pred)
+print("test accuracy =", test_accuracy)
+
+sns.set()
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, vmin=0, vmax=20,
+            xticklabels=class_names, yticklabels=class_names,
+            cmap="Blues", cbar=False)
+plt.gca().set_aspect('equal')
+plt.tight_layout()
+plt.show()
 
 # perform the validation
 prob_pred = model.predict(x_valid)
@@ -57,6 +88,9 @@ print("valid accuracy =", valid_accuracy)
 
 sns.set()
 cm = confusion_matrix(y_valid, y_pred)
-sns.heatmap(cm, annot=True, vmin=0, vmax=20, xticklabels=class_names, yticklabels=class_names)
+sns.heatmap(cm, annot=True, vmin=0, vmax=20,
+            xticklabels=class_names, yticklabels=class_names,
+            cmap="Blues", cbar=False)
+plt.gca().set_aspect('equal')
 plt.tight_layout()
 plt.show()

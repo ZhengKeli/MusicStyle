@@ -3,15 +3,15 @@ import numpy as np
 
 from dataset.audio import play_audio
 from dataset.spectrogram import cqt_spectrogram, mfcc_spectrogram
-from model.spnet import SpNet_v1
+from model.spnet import SpNet
 
 # configurations
-audio_filename = r"C:\Users\keli\OneDrive\其他\音乐\双笙 - 不朽之罪.mp3"
+audio_filename = r".\Scarborough Fair.mp3"
 sample_rate = 22050
-clip_duration = 30
-# clip_duration = None
+# clip_duration = 30
+clip_duration = None
 
-weights_filename = r"logs_archive\logs_spnet1_2\weights_epoch0087.hdf5"
+weights_filename = r"weights/weights_sp.hdf5"
 
 n_cqt = 84
 n_mfcc = 84
@@ -46,7 +46,7 @@ sps = [np.expand_dims(sp, 0) for sp in sps]
 
 # prepare model
 print('preparing model')
-model = SpNet_v1([n_cqt, None, 1], [n_mfcc, None, 1], len(class_names))
+model = SpNet([n_cqt, None, 1], [n_mfcc, None, 1], len(class_names))
 model.load_weights(weights_filename, by_name=True)
 
 print('performing prediction')
