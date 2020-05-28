@@ -10,18 +10,18 @@ from model.spnet import SpNet
 # configurations
 dataset_dir = "./data"
 sample_rate = 22050
-weights_filename = r"logs_sp\weights_epoch0108.hdf5"
+weights_filename = r"logs_sp\weights_epoch0190.hdf5"
 
 n_cqt = 84
 n_mfcc = 84
 n_mel = 128
-clip_size = 1290  # 1290
+clip_size = 1290
 
-input_shape = ([n_cqt, None, 1], [n_mel, None, 1])
+input_shape = ([n_cqt, None, 1], [n_mfcc, None, 1])
 
 # ref files
 class_names, _, test_set, valid_set = load_ref_files(dataset_dir)
-spectrogram_names = ['cqt_spectrogram', 'mel_spectrogram']
+spectrogram_names = ['cqt_spectrogram', 'mfcc_spectrogram']
 
 
 # load dataset
@@ -34,7 +34,7 @@ def random_clip_spectrogram(spectrogram, clip_size):
     return spectrogram
 
 
-def load_subset(subset, noise=0.0):
+def load_subset(subset):
     sp1s = []
     sp2s = []
     ys = []
@@ -44,8 +44,6 @@ def load_subset(subset, noise=0.0):
             sp = load_extracted_feature(audio_filename, spectrogram_name)
             sp = random_clip_spectrogram(sp, clip_size)
             sp = np.expand_dims(sp, -1)
-            if noise != 0.0:
-                sp += np.random.normal(0, noise, np.shape(sp))
             sps.append(sp)
         sp1, sp2 = sps
         sp1s.append(sp1)
@@ -88,6 +86,7 @@ print("valid accuracy =", valid_accuracy)
 
 sns.set()
 cm = confusion_matrix(y_valid, y_pred)
+plt.figure(figsize=(5, 5))
 sns.heatmap(cm, annot=True, vmin=0, vmax=20,
             xticklabels=class_names, yticklabels=class_names,
             cmap="Blues", cbar=False)

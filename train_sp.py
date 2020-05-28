@@ -12,17 +12,10 @@ sample_rate = 22050
 n_cqt = 84
 n_mfcc = 84
 n_mel = 128
-clip_size = 1920 // 6
+clip_size = 1920 // 4
 
-input_shape = ([n_cqt, None, 1], [n_mel, None, 1])
-
-# ref files
-class_names, train_set, test_set, _ = load_ref_files(dataset_dir)
-
-# class_names, train_set1, train_set2, test_set = load_ref_files(dataset_dir)
-# train_set = [*train_set1, *train_set2]
-
-spectrogram_names = ['cqt_spectrogram', 'mel_spectrogram']
+spectrogram_names = ['cqt_spectrogram', 'mfcc_spectrogram']
+input_shape = ([n_cqt, None, 1], [n_mfcc, None, 1])
 
 
 # load dataset
@@ -50,6 +43,8 @@ def load_subset(subset, noise=0.0):
         yield (sp1, sp2), class_id
 
 
+class_names, train_set, test_set, _ = load_ref_files(dataset_dir)
+
 train_tf_dataset = tf.data.Dataset.from_generator(
     lambda: load_subset(train_set),
     ((tf.float32, tf.float32), tf.int32), (input_shape, []))
@@ -70,10 +65,10 @@ model.fit(
     x=train_tf_dataset.batch(8),
     validation_data=test_tf_dataset.batch(8),
     shuffle=True,
-    epochs=200,
+    epochs=300,
     callbacks=[
         tf.keras.callbacks.TerminateOnNaN(),
-        tf.keras.callbacks.EarlyStopping(patience=20),
+        tf.keras.callbacks.EarlyStopping(patience=50),
         tf.keras.callbacks.ModelCheckpoint(
             filepath='logs/weights_epoch{epoch:04d}.hdf5',
             save_best_only=True,

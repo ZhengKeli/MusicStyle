@@ -46,16 +46,16 @@ def spectrogram_processing_block(sp, regularizer=None):
 
 
 def SpNet(sp1_shape, sp2_shape, classes):
-    regularizer = tf.keras.regularizers.l2(0.01)
+    regularizer = tf.keras.regularizers.l2(0.1)
     
     sp1_input = tf.keras.layers.Input(shape=sp1_shape)
     sp1 = sp1_input
-    sp1 = tf.keras.layers.GaussianNoise(0.03)(sp1)
+    sp1 = tf.keras.layers.GaussianNoise(0.05)(sp1)
     sp1 = spectrogram_processing_block(sp1, regularizer)
     
     sp2_input = tf.keras.layers.Input(shape=sp2_shape)
     sp2 = sp2_input
-    sp1 = tf.keras.layers.GaussianNoise(0.03)(sp1)
+    sp2 = tf.keras.layers.GaussianNoise(0.05)(sp2)
     sp2 = spectrogram_processing_block(sp2, regularizer)
     
     x = tf.concat([sp1, sp2], -1)
