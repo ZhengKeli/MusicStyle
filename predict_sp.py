@@ -8,10 +8,10 @@ from model.spnet import SpNet
 # configurations
 audio_filename = r".\Scarborough Fair.mp3"
 sample_rate = 22050
-# clip_duration = 30
-clip_duration = None
+clip_duration = 30  # load only part of audio (in seconds)
+# clip_duration = None # load the whole audio (it may take a long time)
 
-weights_filename = r"weights/weights_sp.hdf5"
+weights_filename = r"logs_sp/weights_epoch0190.hdf5"
 
 n_cqt = 84
 n_mfcc = 84
